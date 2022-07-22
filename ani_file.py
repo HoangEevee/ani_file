@@ -1,6 +1,6 @@
 from chunk import Chunk
 import builtins
-
+import struct
 class ani_read:
     def initfp(self, file):
         pass
@@ -34,8 +34,3 @@ def open(file, mode=None):
     else:
         raise Exception("Mode must be 'r', 'rb', 'w', or 'wb'")
 
-my_ani = builtins.open(".\\test_res\\lamy_wait.ani", 'rb')
-chunk = Chunk(my_ani, bigendian = 0)
-
-print(chunk.chunkname)
-print(chunk.read())
