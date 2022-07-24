@@ -3,7 +3,30 @@ import builtins
 import struct
 class ani_read:
     def initfp(self, file):
-        pass
+        self._file = Chunk(file, bigendian = 0)
+
+        #Check if file is an .ani file
+        if self._file.getname() != b"RIFF":
+            raise Exception("file does not start with RIFF id")
+        if self._file.read(4) != b"ACON":
+            raise Exception("not an .ANI file")
+
+        #loop through each chunk
+        while 1:
+            try:
+                chunk = Chunk(self._file, bigendian = 0)
+            except EOFError:
+                break
+
+            chunkname = chunk.getname()
+            if chunkname == b"anih":
+                self._read_anih_chunk(chunk)
+            elif chunkname == b"LIST":
+                self._list_chunk = chunk
+
+            print(chunkname)
+            chunk.skip()
+        
 
     def __init__(self, file):
         self._i_opened_the_file = None
@@ -17,6 +40,9 @@ class ani_read:
             if self._i_opened_the_file:
                 file.close()
             raise
+
+    def _read_anih_chunk(self, chunk):
+        pass
 
 class ani_write:
     pass
