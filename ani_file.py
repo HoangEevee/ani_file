@@ -19,12 +19,12 @@ class ani_read:
                 break
 
             chunkname = chunk.getname()
-            if chunkname == b"anih":
+            print(chunkname)
+            if chunkname == b'anih':
                 self._read_anih_chunk(chunk)
             elif chunkname == b"LIST":
                 self._list_chunk = chunk
 
-            print(chunkname)
             chunk.skip()
         
 
@@ -42,7 +42,12 @@ class ani_read:
             raise
 
     def _read_anih_chunk(self, chunk):
-        pass
+        try:
+            cbSize, nFrames, nSteps, iWidth, iHeight, iBitCount, nPlanes, iDispRate, bfAttributes = struct.unpack_from("<9I", chunk.read(36))
+            print(cbSize, nFrames, nSteps, iWidth, iHeight, iBitCount, nPlanes, iDispRate, bfAttributes)
+        #TODO: look into what this except actually means
+        except struct.error:
+            raise EOFError from None
 
 class ani_write:
     pass
