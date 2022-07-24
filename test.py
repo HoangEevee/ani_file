@@ -1,9 +1,17 @@
 from chunk import Chunk
 import builtins
 import struct
+import ani_file
 
+ani_file.open(".\\test_res\\lamy_wait.ani")
+if ani_file._
+#ani_file.open(".\\test_res\\aero_busy.ani")
+
+'''
 my_ani = builtins.open(".\\test_res\\lamy_wait.ani", 'rb')
 
+
+#print(my_ani.read())
 whole_chunk = Chunk(my_ani, bigendian = 0)
 
 print(whole_chunk.getname())
@@ -28,3 +36,4 @@ chunk.skip()
 chunk = Chunk(whole_chunk, bigendian = 0)
 print(chunk.getname())
 print(chunk.getsize())
+'''
