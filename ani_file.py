@@ -35,11 +35,10 @@ class ani_read:
                 print(listname)
                 if listname == b"INFO":
                     self._read_info_chunk(chunk)
-                    continue
                 elif listname == b"fram":
                     self._frames = self._read_fram_chunk(chunk)
-                    continue
-
+            elif chunkname == b"seq ":
+                self._read_seq_chunk(chunk)
             chunk.skip()
             
         #Check for proper .ani file
@@ -85,8 +84,13 @@ class ani_read:
     def getnframes(self):
         return self._nFrames
 
+    #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
     def getauthor(self):
-        return
+        return self._iart or "no author data is included in the file"
+
+    #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
+    def getname(self):
+        return self._inam or "no name is included in the file"
 
     def getframedata(self):
         return self._frames
@@ -106,8 +110,8 @@ class ani_read:
 
     def _read_anih_chunk(self, chunk):
         try:
-            cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
-            print(cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes)
+            cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
+            print(cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes)
         #TODO: look into what this except actually means
         except struct.error:
             raise EOFError from None
@@ -116,7 +120,6 @@ class ani_read:
 
     #TODO: THIS HAS NOT BEEN TESTED SINCE I DONT HAVE ANY .ANI FILE WITH INFO CHUNK
     def _read_info_chunk(self, chunk):
-        print("Howdy")
         while 1:
             try:
                 chunk = Chunk(chunk, bigendian=0)
@@ -129,7 +132,6 @@ class ani_read:
                 self._iart = chunk.read(chunk.getsize()).decode("utf-8")
     
     def _read_fram_chunk(self, chunk):
-
         #TODO: support bitmaps frames
         if (self._bfAttributes!=3 and self._bfAttributes!=1):
             raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
@@ -145,6 +147,14 @@ class ani_read:
             frames.append(frame_chunk.read(frame_chunk.getsize()))
             frame_chunk.skip()
         return frames
+
+    #TODO: change so that _seq list of int instead of list of tuple rn
+    def _read_seq_chunk(self, chunk):
+        self._seq = []
+        for i in range(self._nSteps):
+            n = struct.unpack_from("I", chunk.read(4))
+            self._seq.append(n)
+        
 class ani_write:
     pass
 
