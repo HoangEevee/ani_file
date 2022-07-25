@@ -1,6 +1,7 @@
 from chunk import Chunk
 import builtins
 import struct
+
 class ani_read:
     def initfp(self, file):
         self._file = Chunk(file, bigendian = 0)
@@ -18,15 +19,29 @@ class ani_read:
             except EOFError:
                 break
 
+            #Checks for proper .ani file
+            self._has_anih_chunk = False
+            self._has_fram_chunk = False
+
             chunkname = chunk.getname()
             print(chunkname)
+
             if chunkname == b'anih':
                 self._read_anih_chunk(chunk)
+                self._has_anih_chunk = True
+            #Got 2 kinds of LIST chunks: 'INFO' or 'fram'
             elif chunkname == b"LIST":
-                self._list_chunk = chunk
-
+                listname = chunk.read(4)
+                if listname == b"INFO":
+                    self._info_chunk = chunk
+                elif listname == b"fram":
+                    self._fram_chunk = chunk
+                    self._has_fram_chunk = True
             chunk.skip()
-        
+
+        #Check for proper .ani file
+        if not self._has_anih_chunk or not self._has_fram_chunk:
+            raise Exception("anih chunk and/or fram chunk missing")
 
     def __init__(self, file):
         self._i_opened_the_file = None
