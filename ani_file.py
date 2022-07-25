@@ -14,7 +14,7 @@ class ani_read:
 
         #Checks for proper .ani file
         self._has_anih_chunk = False
-        self._fram_chunk = None
+
 
         #loop through each chunk
         while 1:
@@ -34,16 +34,16 @@ class ani_read:
                 listname = chunk.read(4)
                 print(listname)
                 if listname == b"INFO":
-                    self._info_chunk = chunk
-                    break
+                    self._read_info_chunk(chunk)
+                    continue
                 elif listname == b"fram":
-                    self._fram_chunk = chunk
-                    break
+                    self._frames = self._read_fram_chunk(chunk)
+                    continue
 
             chunk.skip()
             
         #Check for proper .ani file
-        if not self._has_anih_chunk or not self._fram_chunk:
+        if not self._has_anih_chunk:
             raise Exception("anih chunk and/or fram chunk missing")
 
     def __init__(self, file):
@@ -85,27 +85,14 @@ class ani_read:
     def getnframes(self):
         return self._nFrames
 
-    def getframesdata(self):
-        #print(self._fram_chunk.read())
-        #print("hi")
-        #TODO: support bitmaps frames
-        if (self._bfAttributes!=3 and self._bfAttributes!=1):
-            raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
-            
-        frames = list()
+    def getauthor(self):
+        return
 
-        while 1:
-            try:
-                frame_chunk = Chunk(self._fram_chunk, bigendian = 0)
-            except EOFError:
-                break
-
-            frames.append(frame_chunk.read(frame_chunk.getsize()))
-            frame_chunk.skip()
-        return frames
+    def getframedata(self):
+        return self._frames
 
     def getframestofile(self, outputpath=".\\", filenameprefix=""):
-        frames = self.getframesdata()
+        frames = self._frames
 
         for id, frame in enumerate(frames):
             path = outputpath+"\\"+filenameprefix+str(id)+".ico"
@@ -119,14 +106,45 @@ class ani_read:
 
     def _read_anih_chunk(self, chunk):
         try:
-            cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, iBitCount, nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
-            print(cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, iBitCount, nPlanes, self._iDispRate, self._bfAttributes)
+            cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
+            print(cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes)
         #TODO: look into what this except actually means
         except struct.error:
             raise EOFError from None
 
         #TODO: might want to put some checks
-        
+
+    #TODO: THIS HAS NOT BEEN TESTED SINCE I DONT HAVE ANY .ANI FILE WITH INFO CHUNK
+    def _read_info_chunk(self, chunk):
+        print("Howdy")
+        while 1:
+            try:
+                chunk = Chunk(chunk, bigendian=0)
+            except EOFError:
+                break
+
+            if chunk.chunkname() == b"INAM":
+                self._inam = chunk.read(chunk.getsize()).decode("utf-8")
+            elif chunk.chunkname() == b"IART":
+                self._iart = chunk.read(chunk.getsize()).decode("utf-8")
+    
+    def _read_fram_chunk(self, chunk):
+
+        #TODO: support bitmaps frames
+        if (self._bfAttributes!=3 and self._bfAttributes!=1):
+            raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
+            
+        frames = list()
+
+        while 1:
+            try:
+                frame_chunk = Chunk(chunk, bigendian = 0)
+            except EOFError:
+                break
+
+            frames.append(frame_chunk.read(frame_chunk.getsize()))
+            frame_chunk.skip()
+        return frames
 class ani_write:
     pass
 
