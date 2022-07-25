@@ -104,6 +104,15 @@ class ani_read:
             frame_chunk.skip()
         return frames
 
+    def getframestofile(self, outputpath=".\\", filenameprefix=""):
+        frames = self.getframesdata()
+
+        for id, frame in enumerate(frames):
+            path = outputpath+"\\"+filenameprefix+str(id)+".ico"
+            new_frame = builtins.open(path, "wb")
+            new_frame.write(frame)
+            new_frame.close()
+
     #
     # Internal methods
     #
