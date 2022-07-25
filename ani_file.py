@@ -12,16 +12,16 @@ class ani_read:
         if self._file.read(4) != b"ACON":
             raise Exception("not an .ANI file")
 
+        #Checks for proper .ani file
+        self._has_anih_chunk = False
+        self._fram_chunk = None
+
         #loop through each chunk
         while 1:
             try:
                 chunk = Chunk(self._file, bigendian = 0)
             except EOFError:
                 break
-
-            #Checks for proper .ani file
-            self._has_anih_chunk = False
-            self._has_fram_chunk = False
 
             chunkname = chunk.getname()
             print(chunkname)
@@ -32,15 +32,18 @@ class ani_read:
             #Got 2 kinds of LIST chunks: 'INFO' or 'fram'
             elif chunkname == b"LIST":
                 listname = chunk.read(4)
+                print(listname)
                 if listname == b"INFO":
                     self._info_chunk = chunk
+                    break
                 elif listname == b"fram":
                     self._fram_chunk = chunk
-                    self._has_fram_chunk = True
-            chunk.skip()
+                    break
 
+            chunk.skip()
+            
         #Check for proper .ani file
-        if not self._has_anih_chunk or not self._has_fram_chunk:
+        if not self._has_anih_chunk or not self._fram_chunk:
             raise Exception("anih chunk and/or fram chunk missing")
 
     def __init__(self, file):
@@ -56,7 +59,7 @@ class ani_read:
                 file.close()
             raise
     
-    #TODO: Not sure if these 3 are really needed. Might want to brush up python class
+    #TODO: Not sure if these 3 are really needed. Might want to brush up on python class
     def __del__(self):
         self.close()
 
@@ -69,6 +72,37 @@ class ani_read:
     #
     # User visible method
     #
+    def getfp(self):
+        return self._file
+
+    def close(self):
+        self._file = None
+        file = self._i_opened_the_file
+        if file:
+            self._i_opened_the_file = None
+            file.close()
+
+    def getnframes(self):
+        return self._nFrames
+
+    def getframesdata(self):
+        #print(self._fram_chunk.read())
+        #print("hi")
+        #TODO: support bitmaps frames
+        if (self._bfAttributes!=3 and self._bfAttributes!=1):
+            raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
+            
+        frames = list()
+
+        while 1:
+            try:
+                frame_chunk = Chunk(self._fram_chunk, bigendian = 0)
+            except EOFError:
+                break
+
+            frames.append(frame_chunk.read(frame_chunk.getsize()))
+            frame_chunk.skip()
+        return frames
 
     #
     # Internal methods
