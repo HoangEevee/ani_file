@@ -55,15 +55,35 @@ class ani_read:
             if self._i_opened_the_file:
                 file.close()
             raise
+    
+    #TODO: Not sure if these 3 are really needed. Might want to brush up python class
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    #
+    # User visible method
+    #
+
+    #
+    # Internal methods
+    #
 
     def _read_anih_chunk(self, chunk):
         try:
-            cbSize, nFrames, nSteps, iWidth, iHeight, iBitCount, nPlanes, iDispRate, bfAttributes = struct.unpack_from("<9I", chunk.read(36))
-            print(cbSize, nFrames, nSteps, iWidth, iHeight, iBitCount, nPlanes, iDispRate, bfAttributes)
+            cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, iBitCount, nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
+            print(cbSize, self._nFrames, nSteps, self._iWidth, self._iHeight, iBitCount, nPlanes, self._iDispRate, self._bfAttributes)
         #TODO: look into what this except actually means
         except struct.error:
             raise EOFError from None
 
+        #TODO: might want to put some checks
+        
 class ani_write:
     pass
 
