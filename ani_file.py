@@ -92,6 +92,9 @@ class ani_read:
     def getname(self):
         return self._inam or "no name is included in the file"
 
+    def getseq(self):
+        return self._seq
+        
     def getframedata(self):
         return self._frames
 
@@ -103,6 +106,7 @@ class ani_read:
             new_frame = builtins.open(path, "wb")
             new_frame.write(frame)
             new_frame.close()
+
 
     #
     # Internal methods
@@ -148,13 +152,11 @@ class ani_read:
             frame_chunk.skip()
         return frames
 
-    #TODO: change so that _seq list of int instead of list of tuple rn
     def _read_seq_chunk(self, chunk):
-        self._seq = []
+        self._seq = tuple()
         for i in range(self._nSteps):
-            n = struct.unpack_from("I", chunk.read(4))
-            self._seq.append(n)
-        
+            self._seq += struct.unpack_from("I", chunk.read(4))
+
 class ani_write:
     pass
 
