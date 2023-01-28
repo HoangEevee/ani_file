@@ -39,6 +39,8 @@ class ani_read:
                     self._frames = self._read_fram_chunk(chunk)
             elif chunkname == b"seq ":
                 self._read_seq_chunk(chunk)
+            elif chunkname == b"rate":
+                self._read_rate_chunk(chunk)
             chunk.skip()
             
         #Check for proper .ani file
@@ -74,6 +76,9 @@ class ani_read:
     def getfp(self):
         return self._file
 
+    def getframesinfo():
+        pass
+
     def close(self):
         self._file = None
         file = self._i_opened_the_file
@@ -86,14 +91,19 @@ class ani_read:
 
     #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
     def getauthor(self):
-        return self._iart or "no author data is included in the file"
+        return self._iart if hasattr(self,"_iart") else "no author data is included in the file"
 
     #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
     def getname(self):
-        return self._inam or "no name is included in the file"
+        return self._inam if hasattr(self,"_inam") else "no name is included in the file"
 
     def getseq(self):
-        return self._seq
+        #If no seq chunk then default seq is first to last
+        return self._seq if hasattr(self,"_seq") else [i for i in range(self._nFrames)]
+
+    def getrate(self):
+        #If no rate chunk then all frame uses default rate iDispRate
+        return self._rate if hasattr(self,"_rate") else [self._iDispRate]*self._nFrames
         
     def getframedata(self):
         return self._frames
@@ -156,6 +166,11 @@ class ani_read:
         self._seq = tuple()
         for i in range(self._nSteps):
             self._seq += struct.unpack_from("I", chunk.read(4))
+
+    def _read_rate_chunk(self, chunk):
+        self._rate = tuple()
+        for i in range(self._nSteps):
+            self._rate += struct.unpack_from("I", chunk.read(4))
 
 class ani_write:
     pass
