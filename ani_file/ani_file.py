@@ -73,6 +73,7 @@ class ani_read:
     #
     # User visible method
     #
+
     def getfp(self):
         return self._file
 
@@ -173,8 +174,85 @@ class ani_read:
             self._rate += struct.unpack_from("I", chunk.read(4))
 
 class ani_write:
-    pass
+    def __init__(self, f):
+        self._i_opened_the_file = None
+        if isinstance(f, str):
+            f = builtins.open(f, 'wb')
+            self._i_opened_the_file = f
+        try:
+            self.initfp(f)
+        except:
+            if self._i_opened_the_file:
+                f.close()
+            raise
+    
+    def initfp(self, file):
+        self._file = file
 
+        self._nFrames = 0
+        self._nSteps = 0
+        self._iDispRate = 0
+        self._bfAttributes = 1
+
+        #These four are only non-zeroes if images are in bitmaps
+        self._iWidth = 0
+        self._iHeight = 0
+        self._iBitCount = 0
+        self._nPlanes = 0
+
+        self._frames = 0
+
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    #
+    # User visible method
+    #
+
+    def setframes(self, frames):
+        self._frames = frames
+
+    def setseq(self, seq):
+        self._seq = seq
+    
+    def setrate(self, rate):
+        self._rate = rate
+
+    def setauthor(self, iart):
+        self._iart = iart
+    
+    def setname(self, inam):
+        self._inam = inam
+
+
+    def close(self):
+        try:
+            if self._file:
+                self._ensure_header_written(0)
+                self._file.flush()
+        finally:
+            self._file = None
+            file = self._i_opened_the_file
+            if file:
+                self._i_opened_the_file = None
+                file.close
+    
+
+    #
+    # Internal methods.
+    #
+    def _ensure_header_written(self, datasize):
+        pass
+    
+    def _write_header(self,):
+        pass
+    
 def open(file, mode=None):
     if mode is None:
         if hasattr(file, "mode"):
