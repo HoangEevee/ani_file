@@ -1,5 +1,5 @@
 # ani_file 
-.ani file (animated cursor) reader and writer writen in python 3.
+.ani file (animated cursor) reader and writer written in python 3.
 
 Was trying to batch extract the frame of some .ani file I got but noticed that there were no library to do so in python so I created one. 
 
