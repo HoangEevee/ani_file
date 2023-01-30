@@ -1,24 +1,61 @@
-.ani file reader and writer for python
-Currently only reader is implemented. Better-ish documentation is coming
+# ani_file 
+.ani file (animated cursor) reader and writer writen in python 3.
 
-Open ANI file with:
+Was trying to batch extract the frame of some .ani file I got but noticed that there were no library to do so in python so I created one. 
+
+**WARNING:** Still in early development. Everything is workable and tested but some names may be changed in the upcoming days (from 31/01/2023) as I clean up the code.
+## Starting point
+Open ANI file in similar manner to builtin.open():
+
     f = ani_file.open(file,mode)
-    
-    file can be name of file or an open file
-    mode is either "r", "rb" for read or "w", "wb" for write
 
-READER:
-    Available getters:
-        getframesinfo() (not implemented): dictionary of info about number of frames, display sequence of frames, display rate of frames
-        getnframes(): return number of frames
-        getseq: return list of sequence in which the frames appear
-        getrate: return list of display rate for each frame
-        getframedata: return binary data of each frame
+`file` can be string or file-like object.
 
-        getauthor: Get name of artist/corporation if present
-        getname: Get ani file name if present
+mode can be:
+`"r"` or `"rb"` to read an existing .ani file.
+`"w"` or `"wb"` to create a new .ani file. **Will overwrite existing file if given same name**
 
-    Save frames of ani into .ico files:
-        getframestofile(outputpath, filenameprefix): Save frames into .ico files at specified outputpath. Name of each file is filenameprefix + frame number (starting from 0)
+## Read .ani
+### Available getter:
 
-#Code based on wave.py at https://github.com/python/cpython/blob/3.10/Lib/wave.py
+`getframesinfo()` (**NOT IMPLEMENTED YET**): dictionary of info about number of frames, display sequence of frames, display rate of frames
+
+`getnframes()`: return number of frames
+
+`getseq`: return list of sequence in which the frames appear
+
+`getrate`: return list of display rate for each frame
+
+`getframedata`: return list of binary data of each frame
+
+`getauthor`: Get name of artist/corporation if present
+
+`getname`: Get ani file name if present
+
+### Extract and save frames into .ico files:
+
+`saveframestofile(outputpath,filenameprefix)`: Save to specified path. Name of each file will be filenameprefix + index from 0
+
+## Write .ani
+### Available getter (**NOT IMPLEMENTED YET**):
+Same as for read .ani
+
+### Available setter:
+
+`setframespath(framespath)`: set list of .ico files that make the frames of the final .ani file. The only function that you really need to write an .ani file
+
+`setseq(seq)`: set seq 
+
+`setrate(rate)`: set rate
+
+`setauthor(iart)`: set name of artist
+
+`setname(inam)`: set name of the ani file
+
+### Example (**INCOMING**)
+
+### .ani file structure explain (**INCOMING**)
+
+
+
+Code based on wave.py at https://github.com/python/cpython/blob/3.10/Lib/wave.py
