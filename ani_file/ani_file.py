@@ -230,8 +230,10 @@ class ani_write:
         self._nSteps = len(seq)
     
     def setrate(self, rate):
-        self._iDispRate = rate*isinstance(rate,int) #update idisprate if rate is a single int
-        self._rate = rate
+        if isinstance(rate,int):
+            self._iDispRate = rate
+        else:
+            self._rate = rate
 
     def setauthor(self, iart):
         self._iart = iart.encode("utf-8")
@@ -258,9 +260,12 @@ class ani_write:
     #
     def _write_data(self):
         anih = self._pack_anih()
-        frames = self._pack_frames()
         info = self._pack_info()
-        self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawriten,b"ACON") + anih + info + frames
+        rate = self._pack_rate()
+        seq = self._pack_seq()
+        frames = self._pack_frames()
+        
+        self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawriten,b"ACON") + anih + info + rate + seq + frames
                         # self._pack_info() + 
                         # self._pack_anih() + 
                         # self._pack_rate() + 
@@ -318,4 +323,3 @@ def open(file, mode=None):
         return ani_write(file)
     else:
         raise Exception("Mode must be 'r', 'rb', 'w', or 'wb'")
-
