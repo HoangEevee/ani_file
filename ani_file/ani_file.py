@@ -109,7 +109,7 @@ class ani_read:
     def getframedata(self):
         return self._frames
 
-    def getframestofile(self, outputpath=".\\", filenameprefix=""):
+    def saveframestofile(self, outputpath=".\\", filenameprefix=""):
         frames = self._frames
 
         for id, frame in enumerate(frames):
