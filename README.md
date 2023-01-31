@@ -26,7 +26,7 @@ mode can be:
 
 `getrate`: return list of display rate for each frame
 
-`getframedata`: return list of binary data of each frame
+`getframesdata`: return list of binary data of each frame
 
 `getauthor`: Get name of artist/corporation if present
 

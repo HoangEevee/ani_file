@@ -15,7 +15,6 @@ class ani_read:
         #Checks for proper .ani file
         self._has_anih_chunk = False
 
-
         #loop through each chunk
         while 1:
             try:
@@ -29,7 +28,7 @@ class ani_read:
             if chunkname == b'anih':
                 self._read_anih_chunk(chunk)
                 self._has_anih_chunk = True
-            #Got 2 kinds of LIST chunks: 'INFO' or 'fram'
+            #Got 2 kinds of LIST chunks: 'INFO' and 'fram'
             elif chunkname == b"LIST":
                 listname = chunk.read(4)
                 print(listname,chunk.getsize())
@@ -77,6 +76,7 @@ class ani_read:
     def getfp(self):
         return self._file
 
+    #TODO: fill this in
     def getframesinfo():
         pass
 
@@ -90,34 +90,29 @@ class ani_read:
     def getnframes(self):
         return self._nFrames
 
-    #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
     def getauthor(self):
         return self._iart if hasattr(self,"_iart") else "no author data is included in the file"
 
-    #TODO: NOT TESTED DUE TO NOT HAVING ANY .ANI FILE WITH THE DATA
     def getname(self):
         return self._inam if hasattr(self,"_inam") else "no name is included in the file"
 
     def getseq(self):
-        #If no seq chunk then default seq is first to last
+        #If no seq chunk then default seq is by frame order
         return self._seq if hasattr(self,"_seq") else [i for i in range(self._nFrames)]
 
     def getrate(self):
         #If no rate chunk then all frame uses default rate iDispRate
-        return self._rate if hasattr(self,"_rate") else [self._iDispRate]*self._nFrames
+        return self._rate if hasattr(self,"_rate") else self._iDispRate
         
-    def getframedata(self):
+    def getframesdata(self):
         return self._frames
 
     def saveframestofile(self, outputpath=".\\", filenameprefix=""):
-        frames = self._frames
-
-        for id, frame in enumerate(frames):
+        for id, frame in enumerate(self._frames):
             path = outputpath+"\\"+filenameprefix+str(id)+".ico"
             new_frame = builtins.open(path, "wb")
             new_frame.write(frame)
             new_frame.close()
-
 
     #
     # Internal methods
@@ -140,14 +135,12 @@ class ani_read:
                 chunk = Chunk(chunk, bigendian=0)
             except EOFError:
                 break
-            print("info chunk is: ", chunk.getname(), chunk.getsize())
-            data = chunk.read(chunk.getsize())
-            print(data)
+
             if chunk.getname() == b"INAM":
-                self._inam = data.decode("utf-8")
+                self._inam = chunk.read(chunk.getsize()).decode("utf-8")
             elif chunk.getname() == b"IART":
-                self._iart = data.decode("utf-8")
-            print("position is: ", chunk.tell())
+                self._iart = chunk.read(chunk.getsize()).decode("utf-8")
+
             chunk.skip()
     
     def _read_fram_chunk(self, chunk):
@@ -156,7 +149,6 @@ class ani_read:
             raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
             
         frames = list()
-
         while 1:
             try:
                 frame_chunk = Chunk(chunk, bigendian = 0)
@@ -196,8 +188,7 @@ class ani_write:
         self._nFrames = 0
         self._nSteps = 0
         self._iDispRate = 8 #Default rate 8 jiffy
-        self._bfAttributes = 1
-
+        self._bfAttributes = 1 #TODO: fix this
         #These four are only non-zeroes if images are in bitmaps
         self._iWidth = 0
         self._iHeight = 0
@@ -205,7 +196,7 @@ class ani_write:
         self._nPlanes = 0
 
         self._framespath = []
-        self._datawriten = 0
+        self._datawritten = 0
 
     def __del__(self):
         self.close()
@@ -232,6 +223,7 @@ class ani_write:
     def setrate(self, rate):
         if isinstance(rate,int):
             self._iDispRate = rate
+            self._rate = None
         else:
             self._rate = rate
 
@@ -240,7 +232,6 @@ class ani_write:
     
     def setname(self, inam):
         self._inam = inam.encode("utf-8")
-
 
     def close(self):
         try:
@@ -254,36 +245,30 @@ class ani_write:
                 self._i_opened_the_file = None
                 file.close()
     
-
     #
     # Internal methods.
     #
+
     def _write_data(self):
+        #Pack these chunks first to calculate _datawritten correctly
         anih = self._pack_anih()
         info = self._pack_info()
         rate = self._pack_rate()
         seq = self._pack_seq()
         frames = self._pack_frames()
-        
-        self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawriten,b"ACON") + anih + info + rate + seq + frames
-                        # self._pack_info() + 
-                        # self._pack_anih() + 
-                        # self._pack_rate() + 
-                        # self._pack_seq() + 
-                        # self._pack_frames()
-                        )
+
+        self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawritten,b"ACON") + anih + info + rate + seq + frames)
 
     def _pack_info(self):
         if hasattr(self,"_inam") or hasattr(self,"_iart"):
             inamChunk,iartChunk = b"",b""
-            # print("before pack info: ", len(inamChunk), len(iartChunk))
+            # IMPORTANT: _inam and _iart need to be padded to even length for Chunk to work
             if hasattr(self,"_inam"):
                 inamChunk = struct.pack(f'<4sI{len(self._iart)}s{"x"*(len(self._inam)%2)}' ,b"INAM",len(self._inam),self._inam)
             if hasattr(self,"_iart"):
                 iartChunk = struct.pack(f'<4sI{len(self._iart)}s{"x"*(len(self._iart)%2)}',b"IART",len(self._iart),self._iart)
             
-            print("packing size of iart and inam: ",len(iartChunk),len(inamChunk))
-            self._datawriten += 12 + len(iartChunk) + len(inamChunk)
+            self._datawritten += 12 + len(iartChunk) + len(inamChunk)
             return struct.pack("<4sI4s", b"LIST",4+len(inamChunk)+len(iartChunk),b"INFO") + inamChunk + iartChunk
 
         
@@ -297,19 +282,22 @@ class ani_write:
                 iconChunks += struct.pack("<4sI",b"icon",len(data)) + data
                 iconSize += 8 + len(data)
                 
-        self._datawriten += 12 + iconSize
+        self._datawritten += 12 + iconSize
         return struct.pack("<4sI4s", b"LIST",4+iconSize,b"fram") + iconChunks
+
     def _pack_anih(self):
-        self._datawriten += 44 #Size of 11I of anih chunk
+        self._datawritten += 44 #Size of 11I of anih chunk
         return struct.pack("<4s10I",b"anih",36,36,self._nFrames,self._nSteps,self._iWidth,self._iHeight,self._iBitCount,self._nPlanes,self._iDispRate,self._bfAttributes)
+
     def _pack_rate(self):
         if hasattr(self,"_rate"):
-            self._datawriten += 8+4*len(self._rate)
-            return struct.pack("<4sI" + "I"*len(self._rate), b"rate",4*len(self._rate),*self._rate)
+            self._datawritten += 8+4*len(self._rate)
+            return struct.pack(f"<4sI{len(self._seq)}I", b"rate",4*len(self._rate),*self._rate)
+
     def _pack_seq(self,):
         if hasattr(self,"_seq"):
-            self._datawriten += 8+4*len(self._seq)
-            return struct.pack("<4sI" + "I"*len(self._seq), b"seq ",4*len(self._seq),*self._seq)
+            self._datawritten += 8+4*len(self._seq)
+            return struct.pack(f"<4sI{len(self._seq)}I", b"seq ",4*len(self._seq),*self._seq)
     
 def open(file, mode=None):
     if mode is None:
