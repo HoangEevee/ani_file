@@ -5,9 +5,10 @@ Was trying to batch extract the frame of some .ani file I got but noticed that t
 
 ## Starting point
 Open ANI file in similar manner to builtin.open():
+```
     from ani_file import ani_file
     f = ani_file.open(file,mode)
-
+```
 `file` can be string or file-like object.
 
 mode can be:
