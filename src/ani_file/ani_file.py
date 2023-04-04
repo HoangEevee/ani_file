@@ -23,7 +23,6 @@ class ani_read:
                 break
 
             chunkname = chunk.getname()
-            print(chunkname)
 
             if chunkname == b'anih':
                 self._read_anih_chunk(chunk)
@@ -31,7 +30,6 @@ class ani_read:
             #Got 2 kinds of LIST chunks: 'INFO' and 'fram'
             elif chunkname == b"LIST":
                 listname = chunk.read(4)
-                print(listname,chunk.getsize())
                 if listname == b"INFO":
                     self._read_info_chunk(chunk)
                 elif listname == b"fram":
@@ -121,7 +119,6 @@ class ani_read:
     def _read_anih_chunk(self, chunk):
         try:
             cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
-            print(cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes)
         #TODO: look into what this except actually means
         except struct.error:
             raise EOFError from None

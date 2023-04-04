@@ -130,5 +130,5 @@ dmypy.json
 
 # My addition: testing env
 
-test.py
-test_output/
+/test
+token.txt
