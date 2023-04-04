@@ -1,9 +1,11 @@
 # ani_file 
 .ani file (animated cursor) reader and writer written in python 3.
 
-Was trying to batch extract the frame of some .ani file I got but noticed that there were no library to do so in python so I created one. 
+Was trying to batch extract the frames of some .ani file I got but noticed that there were no library to do so in python so I created one. 
 
 ## Starting point
+Clone this repo or download package from Pypi with `pip install ani_file`:
+
 Open ANI file in similar manner to builtin.open():
 ```
     from ani_file import ani_file
@@ -13,7 +15,7 @@ Open ANI file in similar manner to builtin.open():
 
 mode can be:
 `"r"` or `"rb"` to read an existing .ani file.
-`"w"` or `"wb"` to create a new .ani file. **Will overwrite existing file if given same name**
+`"w"` or `"wb"` to create a new .ani file. **Will overwrite existing file if there is one**
 
 ## Read .ani
 ### Available getter:
