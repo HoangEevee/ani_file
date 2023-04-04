@@ -21,15 +21,15 @@ mode can be:
 
 `getnframes()`: return number of frames
 
-`getseq`: return list of sequence in which the frames appear
+`getseq()`: return list of sequence in which the frames appear
 
-`getrate`: return list of display rate for each frame
+`getrate()`: return list of display rate for each frame
 
-`getframesdata`: return list of binary data of each frame
+`getframesdata()`: return list of binary data of each frame
 
-`getauthor`: Get name of artist/corporation if present
+`getauthor()`: Get name of artist/corporation if present
 
-`getname`: Get ani file name if present
+`getname()`: Get ani file name (Not the name of the .ani file) if present
 
 ### Extract and save frames into .ico files:
 
