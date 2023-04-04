@@ -3,10 +3,9 @@
 
 Was trying to batch extract the frame of some .ani file I got but noticed that there were no library to do so in python so I created one. 
 
-**WARNING:** Still in early development. Everything is workable and tested but some names may be changed in the upcoming days (from 31/01/2023) as I clean up the code.
 ## Starting point
 Open ANI file in similar manner to builtin.open():
-
+    from ani_file import ani_file
     f = ani_file.open(file,mode)
 
 `file` can be string or file-like object.
