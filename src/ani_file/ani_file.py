@@ -148,7 +148,7 @@ class ani_read:
     def _read_fram_chunk(self, chunk):
         #TODO: support bitmaps frames
         if (self._bfAttributes!=3 and self._bfAttributes!=1):
-            raise Exception("Frame info is in bitmaps (instead of ico) which is not supported for now")
+            raise Exception("Frame info is in bitmaps (instead of ico/cur) which is not supported for now")
             
         frames = list()
         while 1:
@@ -265,14 +265,15 @@ class ani_write:
     def _pack_info(self):
         if hasattr(self,"_inam") or hasattr(self,"_iart"):
             inamChunk,iartChunk = b"",b""
-            # IMPORTANT: _inam and _iart need to be padded to even length for Chunk to work
+            inamPad,iartPad = len(self._inam)%2,len(self._iart)%2
+            #_inam and _iart need to be padded to even length for Chunk to work
             if hasattr(self,"_inam"):
-                inamChunk = struct.pack(f'<4sI{len(self._iart)}s{"x"*(len(self._inam)%2)}' ,b"INAM",len(self._inam),self._inam)
+                inamChunk = struct.pack(f'<4sI{len(self._inam)}s{"x"*inamPad}' ,b"INAM",len(self._inam)+inamPad,self._inam)
             if hasattr(self,"_iart"):
-                iartChunk = struct.pack(f'<4sI{len(self._iart)}s{"x"*(len(self._iart)%2)}',b"IART",len(self._iart),self._iart)
+                iartChunk = struct.pack(f'<4sI{len(self._iart)}s{"x"*iartPad}',b"IART",len(self._iart)+iartPad,self._iart)
             
-            self._datawritten += 12 + len(iartChunk) + len(inamChunk)
-            return struct.pack("<4sI4s", b"LIST",4+len(inamChunk)+len(iartChunk),b"INFO") + inamChunk + iartChunk
+            self._datawritten += 12 + len(iartChunk) + iartPad + len(inamChunk) + inamPad
+            return struct.pack("<4sI4s", b"LIST",4+len(inamChunk)+inamPad+len(iartChunk)+iartPad,b"INFO") + inamChunk + iartChunk
 
         
     def _pack_frames(self):
