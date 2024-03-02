@@ -77,8 +77,8 @@ class ani_read:
         return self._file
 
     #TODO: fill this in
-    def getframesinfo():
-        pass
+    def getframesinfo(self):
+        return [self._cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes]
 
     def close(self):
         self._file = None
@@ -98,10 +98,12 @@ class ani_read:
 
     def getseq(self):
         #If no seq chunk then default seq is by frame order
+        if hasattr(self,"_seq"):print("found seq chunk ")
         return self._seq if hasattr(self,"_seq") else [i for i in range(self._nFrames)]
 
     def getrate(self):
         #If no rate chunk then all frame uses default rate iDispRate
+        if hasattr(self,"_rate"):print("found rate chunk ")
         return self._rate if hasattr(self,"_rate") else self._iDispRate
         
     def getframesdata(self):
@@ -123,7 +125,7 @@ class ani_read:
 
     def _read_anih_chunk(self, chunk):
         try:
-            cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
+            self._cbSize, self._nFrames, self._nSteps, self._iWidth, self._iHeight, self._iBitCount, self._nPlanes, self._iDispRate, self._bfAttributes = struct.unpack_from("<9I", chunk.read(36))
         #TODO: look into what this except actually means
         except struct.error:
             raise EOFError from None
@@ -168,9 +170,12 @@ class ani_read:
 
     def _read_rate_chunk(self, chunk):
         self._rate = tuple()
+        print("start reading rate")
         for i in range(self._nSteps):
-            self._rate += struct.unpack_from("I", chunk.read(4))
-
+            fourbytes=chunk.read(4)
+            print(fourbytes)
+            self._rate += struct.unpack_from("I", fourbytes)
+        print("done reading rate")
 class ani_write:
     def __init__(self, f):
         self._i_opened_the_file = None
@@ -188,7 +193,6 @@ class ani_write:
         self._file = file
 
         self._nFrames = 0
-        self._nSteps = 0
         self._iDispRate = 8 #Default rate 8 jiffy
         self._bfAttributes = 1 # 1 = no seq chunk; 3 = got seq chunk
         #These four are only non-zeroes if images are in bitmaps
@@ -216,7 +220,11 @@ class ani_write:
     def setframespath(self, framespath):
         self._framespath = framespath
         self._nFrames = len(framespath)
-        if (not hasattr(self,"_nSteps")): self._nSteps = len(framespath)
+        if (not hasattr(self,"_nSteps")): 
+            print("making steps", len(framespath))
+            self._nSteps = len(framespath)
+        print(self._nFrames,' frames added')
+        print(self._nSteps,' steps added')
 
     def setseq(self, seq):
         self._seq = seq
@@ -229,6 +237,7 @@ class ani_write:
             self._rate = None
         else:
             self._rate = rate
+        print(self._rate)
 
     def setauthor(self, iart):
         self._iart = iart.encode("utf-8")
@@ -259,6 +268,7 @@ class ani_write:
         rate = self._pack_rate()
         seq = self._pack_seq()
         frames = self._pack_frames()
+        print(anih)
         print("yoyoyo")
         print("anih: ", anih is None)
         print("info: ", info is None)
@@ -284,13 +294,15 @@ class ani_write:
     def _pack_frames(self):
         iconSize = 0
         iconChunks = b""
-
+        
         for framPath in self._framespath:
             with builtins.open(framPath, "rb") as icon:
                 data = icon.read()
-                iconChunks += struct.pack("<4sI",b"icon",len(data)) + data
-                iconSize += 8 + len(data)
-                
+                iconpad=len(data)%2
+                iconChunks += struct.pack(f'<4sI',b"icon",len(data)+iconpad) + data + struct.pack(f'{"x"*iconpad}')
+                iconSize += 8 + len(data)+iconpad
+                # print(len(data))
+                # print(len(data)+iconpad)
         self._datawritten += 12 + iconSize
         return struct.pack("<4sI4s", b"LIST",4+iconSize,b"fram") + iconChunks
 
@@ -300,6 +312,9 @@ class ani_write:
 
     def _pack_rate(self):
         if hasattr(self,"_rate"):
+            print("packing rate: ", self._rate)
+            print(*self._rate)
+            print(struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate))
             self._datawritten += 8+4*len(self._rate)
             return struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate)
         return b""
