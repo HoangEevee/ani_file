@@ -290,13 +290,13 @@ class ani_write:
         return struct.pack("<4sI4s", b"LIST",4+iconSize,b"fram") + iconChunks
 
     def _pack_anih(self):
-        self._datawritten += 44 #Size of 11I of anih chunk
+        self._datawritten += 44 #Size of anih chunk
         return struct.pack("<4s10I",b"anih",36,36,self._nFrames,self._nSteps,self._iWidth,self._iHeight,self._iBitCount,self._nPlanes,self._iDispRate,self._bfAttributes)
 
     def _pack_rate(self):
         if hasattr(self,"_rate"):
             self._datawritten += 8+4*len(self._rate)
-            return struct.pack(f"<4sI{len(self._seq)}I", b"rate",4*len(self._rate),*self._rate)
+            return struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate)
 
     def _pack_seq(self,):
         if hasattr(self,"_seq"):
