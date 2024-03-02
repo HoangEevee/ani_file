@@ -38,6 +38,8 @@ class ani_read:
                 self._read_seq_chunk(chunk)
             elif chunkname == b"rate":
                 self._read_rate_chunk(chunk)
+            else:
+                print(f"Skipping {chunkname} chunk as not it is not part of a typical .ani file structure" )
             chunk.skip()
             
         #Check for proper .ani file
@@ -185,7 +187,7 @@ class ani_write:
         self._nFrames = 0
         self._nSteps = 0
         self._iDispRate = 8 #Default rate 8 jiffy
-        self._bfAttributes = 1 #TODO: fix this
+        self._bfAttributes = 1 # 1 = no seq chunk; 3 = got seq chunk
         #These four are only non-zeroes if images are in bitmaps
         self._iWidth = 0
         self._iHeight = 0
@@ -211,10 +213,11 @@ class ani_write:
     def setframespath(self, framespath):
         self._framespath = framespath
         self._nFrames = len(framespath)
-        self._nSteps = len(framespath)
+        if (not hasattr(self,"_nSteps")): self._nSteps = len(framespath)
 
     def setseq(self, seq):
         self._seq = seq
+        self._bfAttributes = 3
         self._nSteps = len(seq)
     
     def setrate(self, rate):
