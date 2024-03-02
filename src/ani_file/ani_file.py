@@ -259,7 +259,12 @@ class ani_write:
         rate = self._pack_rate()
         seq = self._pack_seq()
         frames = self._pack_frames()
-
+        print("yoyoyo")
+        print("anih: ", anih is None)
+        print("info: ", info is None)
+        print("rate: ", rate is None)
+        print("seq: ", seq is None)
+        print("frames: ", frames is None)
         self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawritten,b"ACON") + anih + info + rate + seq + frames)
 
     def _pack_info(self):
@@ -274,7 +279,7 @@ class ani_write:
             
             self._datawritten += 12 + len(iartChunk) + iartPad + len(inamChunk) + inamPad
             return struct.pack("<4sI4s", b"LIST",4+len(inamChunk)+inamPad+len(iartChunk)+iartPad,b"INFO") + inamChunk + iartChunk
-
+        return b""
         
     def _pack_frames(self):
         iconSize = 0
@@ -297,12 +302,12 @@ class ani_write:
         if hasattr(self,"_rate"):
             self._datawritten += 8+4*len(self._rate)
             return struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate)
-
+        return b""
     def _pack_seq(self,):
         if hasattr(self,"_seq"):
             self._datawritten += 8+4*len(self._seq)
             return struct.pack(f"<4sI{len(self._seq)}I", b"seq ",4*len(self._seq),*self._seq)
-    
+        return b""
 def open(file, mode=None):
     print("HIIII")
     if mode is None:
