@@ -1,7 +1,7 @@
 from chunk import Chunk
 import builtins
 import struct
-
+print("EEVEE")
 class ani_read:
     def initfp(self, file):
         self._file = Chunk(file, bigendian = 0)
@@ -109,7 +109,10 @@ class ani_read:
 
     def saveframestofile(self, outputpath=".\\", filenameprefix=""):
         for id, frame in enumerate(self._frames):
-            path = outputpath+"\\"+filenameprefix+str(id)+".ico"
+            #check if frame is .ico or .cur 
+            is_ico= True if struct.unpack_from("<H", frame,offset=2)==1 else False
+            
+            path = outputpath+"\\"+filenameprefix+str(id)+(".ico" if is_ico else ".cur")
             new_frame = builtins.open(path, "wb")
             new_frame.write(frame)
             new_frame.close()
@@ -300,6 +303,7 @@ class ani_write:
             return struct.pack(f"<4sI{len(self._seq)}I", b"seq ",4*len(self._seq),*self._seq)
     
 def open(file, mode=None):
+    print("HIIII")
     if mode is None:
         if hasattr(file, "mode"):
             mode = file.mode
