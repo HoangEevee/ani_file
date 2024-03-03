@@ -3,6 +3,10 @@
 
 Was trying to batch extract the frames of some .ani file I got but noticed that there were no library to do so in python so I created one. 
 
+Reader can read metadata and extract frames (into either .cur or .ico as encoded in the .ani).
+
+Writer can create .ani from .cur, .ico, or other file types like .png as supported by Iconolatry. .cur files may be created as needed and will be stored in the same folder as the .ani file. 
+
 ## Starting point
 Clone this repo or download package from Pypi with `pip install ani_file`:
 
@@ -20,7 +24,7 @@ mode can be:
 ## Read .ani
 ### Available getter:
 
-`getframesinfo()` (**NOT IMPLEMENTED YET**): dictionary of info about number of frames, display sequence of frames, display rate of frames
+`getframesinfo()`: return metadata in the anih header chunk
 
 `getnframes()`: return number of frames
 
@@ -39,12 +43,9 @@ mode can be:
 `saveframestofile(outputpath,filenameprefix)`: Save to specified path. Name of each file will be filenameprefix + index from 0
 
 ## Write .ani
-### Available getter (**NOT IMPLEMENTED YET**):
-Same as for read .ani
-
 ### Available setter:
 
-`setframespath(framespath)`: set list of .ico files that make the frames of the final .ani file. The only function that you really need to write an .ani file
+`setframespath(framespath,xy)`: set list of .ico/.cur files that make the frames of the final .ani file. xy is a list of the cursor's hotspot defined as offset from the top-left corner and is a property of .cur file. If framespath are not .cur files (or .ico with xy specified) then .cur file will be generated. If framespath are .cur files then xy will be ignored. 
 
 `setseq(seq)`: set seq 
 
@@ -54,10 +55,27 @@ Same as for read .ani
 
 `setname(inam)`: set name of the ani file
 
-### Example (**INCOMING**)
+### Example 
+```
+    from ani_file import ani_file
+    #Creating .ani file from .png
+    f = ani_file.open(".\\out\\ani.ani","w")
+    lists = [".\\res\\cursor0.png",
+        ".\\res\\cursor1.png",
+        ".\\res\\cursor2.png",]
+    f.setframespath(lists,xy=(0,0))
+    f.close
 
-### .ani file structure explain (**INCOMING**)
+    #extracting frames from existing .ani file
+    f = ani_file.open(".\\out\\ani.ani","r")
+    f.saveframestofile(".\\out","cursor")
+```
+### .ani file structure explain 
+
+https://www.informit.com/articles/article.aspx?p=1189080&seqNum=3
+
+https://www.daubnet.com/en/file-format-ani
 
 
 
-Code based on wave.py at https://github.com/python/cpython/blob/3.10/Lib/wave.py
+Code based on wave.py at https://github.com/python/cpython/blob/3.10/Lib/wave.py. Cursor converter is Iconolatry from https://github.com/SystemRage/Iconolatry/tree/master. 
