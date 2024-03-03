@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 [project]
 name = "ani_file"
-version = "0.0.2"
+version = "0.1.0"
 authors = [
   { name="HoangEevee", email="nguyenquochoang2806@gmail.com" },
 ]
