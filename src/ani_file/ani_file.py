@@ -1,7 +1,10 @@
 from chunk import Chunk
+# from PIL import Image
+from pathlib import Path
+from Iconolatry import *
 import builtins
 import struct
-print("EEVEE")
+
 class ani_read:
     def initfp(self, file):
         self._file = Chunk(file, bigendian = 0)
@@ -38,8 +41,8 @@ class ani_read:
                 self._read_seq_chunk(chunk)
             elif chunkname == b"rate":
                 self._read_rate_chunk(chunk)
-            else:
-                print(f"Skipping {chunkname} chunk as not it is not part of a typical .ani file structure" )
+            # else:
+            #     print(f"Skipping {chunkname} chunk as not it is not part of a typical .ani file structure" )
             chunk.skip()
             
         #Check for proper .ani file
@@ -98,12 +101,10 @@ class ani_read:
 
     def getseq(self):
         #If no seq chunk then default seq is by frame order
-        if hasattr(self,"_seq"):print("found seq chunk ")
         return self._seq if hasattr(self,"_seq") else [i for i in range(self._nFrames)]
 
     def getrate(self):
         #If no rate chunk then all frame uses default rate iDispRate
-        if hasattr(self,"_rate"):print("found rate chunk ")
         return self._rate if hasattr(self,"_rate") else self._iDispRate
         
     def getframesdata(self):
@@ -170,12 +171,8 @@ class ani_read:
 
     def _read_rate_chunk(self, chunk):
         self._rate = tuple()
-        print("start reading rate")
         for i in range(self._nSteps):
-            fourbytes=chunk.read(4)
-            print(fourbytes)
-            self._rate += struct.unpack_from("I", fourbytes)
-        print("done reading rate")
+            self._rate += struct.unpack_from("I", chunk.read(4))
 class ani_write:
     def __init__(self, f):
         self._i_opened_the_file = None
@@ -191,7 +188,6 @@ class ani_write:
     
     def initfp(self, file):
         self._file = file
-
         self._nFrames = 0
         self._iDispRate = 8 #Default rate 8 jiffy
         self._bfAttributes = 1 # 1 = no seq chunk; 3 = got seq chunk
@@ -217,14 +213,12 @@ class ani_write:
     # User visible method
     #
 
-    def setframespath(self, framespath):
+    def setframespath(self, framespath, xy = None):
         self._framespath = framespath
         self._nFrames = len(framespath)
         if (not hasattr(self,"_nSteps")): 
-            print("making steps", len(framespath))
             self._nSteps = len(framespath)
-        print(self._nFrames,' frames added')
-        print(self._nSteps,' steps added')
+        self._xy = xy
 
     def setseq(self, seq):
         self._seq = seq
@@ -237,7 +231,6 @@ class ani_write:
             self._rate = None
         else:
             self._rate = rate
-        print(self._rate)
 
     def setauthor(self, iart):
         self._iart = iart.encode("utf-8")
@@ -268,13 +261,6 @@ class ani_write:
         rate = self._pack_rate()
         seq = self._pack_seq()
         frames = self._pack_frames()
-        print(anih)
-        print("yoyoyo")
-        print("anih: ", anih is None)
-        print("info: ", info is None)
-        print("rate: ", rate is None)
-        print("seq: ", seq is None)
-        print("frames: ", frames is None)
         self._file.write(struct.pack("<4sI4s",b"RIFF",4+self._datawritten,b"ACON") + anih + info + rate + seq + frames)
 
     def _pack_info(self):
@@ -296,13 +282,22 @@ class ani_write:
         iconChunks = b""
         
         for framPath in self._framespath:
+            framPath = Path(framPath)
+            #need to convert to .cur
+            if (not(framPath.suffix in ('.cur','.ico')) or ((self._xy is not None) and (framPath.suffix != ".cur"))):
+                #default cursor hotspot at top left
+                self._xy = self._xy or (0,0) 
+                # print("Generating .cur file")
+                Encode([[framPath.__str__()]],paths_icocur=[Path(self._file.name).parent.__str__()],names_icocur=[framPath.stem],
+                       formats_icocur=[('.cur',self._xy[0],self._xy[1])])
+                framPath = Path(self._file.name).with_stem(framPath.stem).with_suffix('.cur')
+
             with builtins.open(framPath, "rb") as icon:
                 data = icon.read()
+
                 iconpad=len(data)%2
                 iconChunks += struct.pack(f'<4sI',b"icon",len(data)+iconpad) + data + struct.pack(f'{"x"*iconpad}')
                 iconSize += 8 + len(data)+iconpad
-                # print(len(data))
-                # print(len(data)+iconpad)
         self._datawritten += 12 + iconSize
         return struct.pack("<4sI4s", b"LIST",4+iconSize,b"fram") + iconChunks
 
@@ -312,9 +307,6 @@ class ani_write:
 
     def _pack_rate(self):
         if hasattr(self,"_rate"):
-            print("packing rate: ", self._rate)
-            print(*self._rate)
-            print(struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate))
             self._datawritten += 8+4*len(self._rate)
             return struct.pack(f"<4sI{len(self._rate)}I", b"rate",4*len(self._rate),*self._rate)
         return b""
@@ -324,7 +316,6 @@ class ani_write:
             return struct.pack(f"<4sI{len(self._seq)}I", b"seq ",4*len(self._seq),*self._seq)
         return b""
 def open(file, mode=None):
-    print("HIIII")
     if mode is None:
         if hasattr(file, "mode"):
             mode = file.mode
